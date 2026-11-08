@@ -60,7 +60,7 @@ void format_to_str(char* out, const char* fmt, va_list args) {
                 char c = (char)va_arg(args, int);
                 strncat(out, &c, 1);
             } else if (*fmt == 'x') {
-                utoa(va_arg(args, unsigned int), out + strlen(out), 10);
+                utoa(va_arg(args, unsigned int), out + strlen(out), 16);
             } else if (*fmt == 'p') {
                 strcat(out, "0x");
                 utoa((unsigned int)va_arg(args, void*), out + strlen(out), 16);
