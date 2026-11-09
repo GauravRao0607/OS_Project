@@ -8,15 +8,38 @@
 #include <sys/queue.h>
 #include "print.c"
 #include "thread.h"
+#define STACK_SIZE 128
 
-/* Student's code goes here (Cooperative Threads). */
-/* Define the TCB and helper functions (if needed) for cooperative threads. */
+enum thread_status {
+    UNUSED,
+    RUNNING,
+    BLOCKED,
+    RUNNABLE,
+    ZOMBIE
 
-/* Student's code ends here. */
+};
+
+struct thread{
+    int id;
+    void* sp;
+    void* stack_base;
+    enum thread_status status;
+    void(*entry)(void* arg);
+    void* arg;
+};
+
+int curr_indx;
+struct thread TCB[32];
 
 void thread_init() {
     /* Student's code goes here (Cooperative Threads). */
-
+    for(int i = 0; i<32; i++){
+        TCB[i].status = UNUSED;
+    }
+    TCB[0].id = 0;
+    TCB[0].status = RUNNING;
+    TCB[0].stack_base = NULL;
+    curr_indx = 0;
     /* Student's code ends here. */
 }
 
@@ -28,7 +51,27 @@ void ctx_entry() {
 
 void thread_create(void (*entry)(void *arg), void *arg) {
     /* Student's code goes here (Cooperative Threads). */
+    int free_indx;
+    for(free_indx = 0; free_indx<32; free_indx++){
+        if(TCB[free_indx].status == UNUSED){
+            break;
+        }
+    }
+    if(free_indx == 32){
+        printf("Thread count exceeded limit.");
+        return;
+    }
+    TCB[free_indx].id = free_indx;
+    TCB[free_indx].entry = entry;
+    TCB[free_indx].arg = arg;
+    TCB[free_indx].stack_base = malloc(STACK_SIZE);
+    TCB[free_indx].status = RUNNING;
 
+
+    int prev_indx = curr_indx;
+    TCB[prev_indx].status = RUNNABLE;
+    curr_indx = free_indx;
+    ctx_start( &TCB[prev_indx].sp, (char*)TCB[free_indx].stack_base + STACK_SIZE );
     /* Student's code ends here. */
 }
 
